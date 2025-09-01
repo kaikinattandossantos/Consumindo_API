@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value; // 1. IMPORTANTE: Importar a anotação @Value
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -32,6 +33,7 @@ public class BrapiService {
 
 
     @Async
+    @Cacheable(value = "stocks", key = "#ticker")
     public CompletableFuture<AcaoDTO> consultarAcaoAsync(String ticker) {
         AcaoDTO acao = consultarAcao(ticker); // chama seu método atual
         return CompletableFuture.completedFuture(acao);
