@@ -5,6 +5,8 @@ import com.base.demo.dto.AcaoFavoritaDetalhadaDTO;
 import com.base.demo.model.AcaoFavorita;
 import com.base.demo.repository.AcaoFavoritaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,6 +23,7 @@ public class AcaoFavoritaService {
     @Autowired
     private BrapiService brapiService;
 
+    @CacheEvict(value = "stocks", key = "#acao.getTicker()")
     public AcaoFavorita salvar(AcaoFavorita acao) {
 
         return repository.save(acao);
@@ -34,14 +37,24 @@ public class AcaoFavoritaService {
         return repository.findById(id);
     }
 
+// DENTRO DE AcaoFavoritaService.java
+
     public AcaoFavorita atualizar(Long id, AcaoFavorita acaoAtualizada) {
         return repository.findById(id)
-                .map(acaoExistente -> {
-                    acaoExistente.setTicker(acaoAtualizada.getTicker());
-                    acaoExistente.setAnotacaoPessoal(acaoAtualizada.getAnotacaoPessoal());
-                    return repository.save(acaoExistente);
-                })
-                .orElseThrow(() -> new RuntimeException("Ação com id " + id + " não encontrada!"));
+            .map(acaoExistente -> {
+                // Atualiza os campos que já existiam
+                acaoExistente.setTicker(acaoAtualizada.getTicker());
+                acaoExistente.setAnotacaoPessoal(acaoAtualizada.getAnotacaoPessoal());
+                
+                // --- LINHAS NOVAS E CORRIGIDAS ---
+                // Agora também atualizamos os campos de alerta e e-mail
+                acaoExistente.setUsuarioEmail(acaoAtualizada.getUsuarioEmail());
+                acaoExistente.setPrecoAlvoCompra(acaoAtualizada.getPrecoAlvoCompra());
+                acaoExistente.setPrecoAlvoVenda(acaoAtualizada.getPrecoAlvoVenda());
+                
+                return repository.save(acaoExistente);
+            })
+            .orElseThrow(() -> new RuntimeException("Ação com id " + id + " não encontrada!"));
     }
 
     public void deletar(Long id) {
@@ -50,7 +63,7 @@ public class AcaoFavoritaService {
         }
         repository.deleteById(id);
     }
-
+    @Cacheable(value = "favoritasComPreco") 
     public List<AcaoFavoritaDetalhadaDTO> listarFavoritasComPreco() {
         List<AcaoFavorita> todasAsFavoritas = repository.findAll(); // atenção no nome!
 

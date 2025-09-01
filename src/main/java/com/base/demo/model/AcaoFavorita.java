@@ -19,4 +19,8 @@ public class AcaoFavorita {
     private String ticker;
 
     private String anotacaoPessoal;
+
+    private String usuarioEmail; // E-mail para onde o alerta será enviado
+    private Double precoAlvoCompra; // Alerta quando o preço CAI para este valor ou menos
+    private Double precoAlvoVenda; 
 }
